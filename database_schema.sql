@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 730uN2wvAF9BQBbnjYcco8onK9U0EvNYM90sC2WcOIhRrX0VjIiH97uTs3NQ9xx
+\restrict CYUapTEDSoQjJzVmMBYlaPzvAWH3ggAM5LdZfGg4OnGRPy6ki5UVbxuAwNN3JCj
 
 -- Dumped from database version 18.4 (365f1e4)
 -- Dumped by pg_dump version 18.3
@@ -27,8 +27,8 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.embedded_generation (
     poc character varying(8) NOT NULL,
-    end_time time with time zone NOT NULL,
-    load double precision
+    load double precision,
+    end_time timestamp with time zone NOT NULL
 );
 
 
@@ -38,8 +38,8 @@ CREATE TABLE public.embedded_generation (
 
 CREATE TABLE public.generation (
     gen_code character varying(8) NOT NULL,
-    end_time time with time zone NOT NULL,
-    load double precision
+    load double precision,
+    end_time timestamp with time zone NOT NULL
 );
 
 
@@ -60,8 +60,8 @@ CREATE TABLE public.generator (
 
 CREATE TABLE public.grid_export (
     node_id character varying(16) NOT NULL,
-    end_time time with time zone NOT NULL,
-    load double precision
+    load double precision,
+    end_time timestamp with time zone NOT NULL
 );
 
 
@@ -71,8 +71,8 @@ CREATE TABLE public.grid_export (
 
 CREATE TABLE public.grid_import (
     node_id character varying(16) NOT NULL,
-    end_time time with time zone NOT NULL,
-    load double precision
+    load double precision,
+    end_time timestamp with time zone NOT NULL
 );
 
 
@@ -93,7 +93,7 @@ CREATE TABLE public.grid_nodes (
 --
 
 ALTER TABLE ONLY public.embedded_generation
-    ADD CONSTRAINT embedded_generation_pk PRIMARY KEY (end_time, poc);
+    ADD CONSTRAINT embedded_generation_pk PRIMARY KEY (poc, end_time);
 
 
 --
@@ -125,7 +125,7 @@ ALTER TABLE ONLY public.grid_export
 --
 
 ALTER TABLE ONLY public.grid_import
-    ADD CONSTRAINT grid_import_pk PRIMARY KEY (end_time, node_id);
+    ADD CONSTRAINT grid_import_pk PRIMARY KEY (node_id, end_time);
 
 
 --
@@ -140,5 +140,5 @@ ALTER TABLE ONLY public.grid_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 730uN2wvAF9BQBbnjYcco8onK9U0EvNYM90sC2WcOIhRrX0VjIiH97uTs3NQ9xx
+\unrestrict CYUapTEDSoQjJzVmMBYlaPzvAWH3ggAM5LdZfGg4OnGRPy6ki5UVbxuAwNN3JCj
 
