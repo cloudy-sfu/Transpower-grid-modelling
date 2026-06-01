@@ -72,20 +72,22 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         }, inplace=True)
 
         # Get unique nodes
-        load['Node_ID'] = load['POC'] + "_" + load["Nwk_Code"] + "_" + load['Generation_Type']
-        nodes = (load[['Node_ID', 'POC', 'Nwk_Code', 'Generation_Type']]
-                 .drop_duplicates(ignore_index=True, subset=['Node_ID']))
+        load['node_id'] = load['POC'] + "_" + load["Nwk_Code"] + "_" + load['Generation_Type']
+        nodes = (load[['node_id', 'POC', 'Nwk_Code', 'Generation_Type']]
+                 .drop_duplicates(ignore_index=True, subset=['node_id']))
+        nodes.rename(columns={"POC": "poc", "Nwk_Code": "nwk_code",
+                              "Generation_Type": "generation_type"}, inplace=True)
         insert_skip_conflict(
             engine,
             nodes,
-            ["Node_ID"],
+            ["node_id"],
             "grid_nodes"
         )
 
         # Get electricity load
         load = pd.melt(
             frame=load,
-            id_vars=["Node_ID", "Trader", "Trading_Date"],
+            id_vars=["node_id", "Trader", "Trading_Date"],
             value_vars=[col for col in load.columns if col.startswith('TP')],
             var_name='TP',
             value_name='load'
@@ -98,14 +100,14 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         load['end_time'] = load['end_time'].dt.tz_convert('UTC')
 
         # Aggregate traders
-        load = load[['Node_ID', 'end_time', 'load']]
-        load = load.groupby(['Node_ID', 'end_time']).sum().reset_index()
+        load = load[['node_id', 'end_time', 'load']]
+        load = load.groupby(['node_id', 'end_time']).sum().reset_index()
 
         for i in range(0, load.shape[0], chunk_size):
             upsert(
                 engine,
                 load.iloc[i:i + chunk_size, :],
-                ['Node_ID', 'end_time'],
+                ['node_id', 'end_time'],
                 "grid_import"
             )
 

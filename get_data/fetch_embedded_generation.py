@@ -109,14 +109,15 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
 
         # Aggregate traders
         load['load'] = load['load'] * load['Flow_Direction']
-        load = load[['POC', 'end_time', 'load']]
-        load = load.groupby(['POC', 'end_time']).sum().reset_index()
+        load.rename(columns={"POC": "poc"}, inplace=True)
+        load = load[['poc', 'end_time', 'load']]
+        load = load.groupby(['poc', 'end_time']).sum().reset_index()
 
         for i in range(0, load.shape[0], chunk_size):
             upsert(
                 engine,
                 load.iloc[i:i + chunk_size, :],
-                ['POC', 'end_time'],
+                ['poc', 'end_time'],
                 "embedded_generation"
             )
 

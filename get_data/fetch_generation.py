@@ -72,19 +72,21 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         }, inplace=True)
 
         # Get unique generators
-        generator = (load[["Gen_Code", "POC_Code", "Fuel_Code"]]
+        load.rename(columns={"Gen_Code": "gen_code", "POC_Code": "poc_code",
+                             "Fuel_Code": "fuel_code"}, inplace=True)
+        generator = (load[["gen_code", "poc_code", "fuel_code"]]
                      .drop_duplicates(ignore_index=True))
         insert_skip_conflict(
             engine,
             generator,
-            ["Gen_Code"],
+            ["gen_code"],
             "generator"
         )
 
         # Get electricity load
         load = pd.melt(
             frame=load,
-            id_vars=["Gen_Code", "Trading_Date"],
+            id_vars=["gen_code", "Trading_Date"],
             value_vars=[col for col in load.columns if col.startswith('TP')],
             var_name='TP',
             value_name='load'
@@ -95,12 +97,12 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
                             .dt.tz_localize('Pacific/Auckland')
                             + pd.Timedelta(minutes=30) * load['TP'])
         load['end_time'] = load['end_time'].dt.tz_convert('UTC')
-        load = load[['Gen_Code', 'end_time', 'load']]
+        load = load[['gen_code', 'end_time', 'load']]
         for i in range(0, load.shape[0], chunk_size):
             upsert(
                 engine,
                 load.iloc[i:i+chunk_size, :],
-                ['Gen_Code', 'end_time'],
+                ['gen_code', 'end_time'],
                 "generation"
             )
 
