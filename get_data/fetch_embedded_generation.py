@@ -44,6 +44,7 @@ year_month = year_month['year_month'].tolist()
 with open("headers/emidatasets.json") as f:
     header_2 = json.load(f)
 chunk_size = 2000
+retries = 0
 
 
 def grid_flow_multiplier(s):
@@ -121,4 +122,8 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
     except Exception as e:
         logging.warning(f"Fail to download file {a_href}\n"
                         f"Reason: {e}")
-        continue
+        retries += 0.2
+        if retries > 1:
+            raise Exception("Stop because of too many failed instances.")
+        else:
+            continue
