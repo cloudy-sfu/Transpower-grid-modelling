@@ -95,8 +95,12 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         )
         load.dropna(subset=['load'], inplace=True)
         load['TP'] = load['TP'].str.extract(r'(\d+)', expand=False).astype('Int64')
-        load['end_time'] = (pd.to_datetime(load["Trading_Date"])
-                            .dt.tz_localize('Pacific/Auckland')
+        if "/" in load.loc[0, "Trading_Date"]:
+            # pandas parse as "%m/%d/%Y" by default, which needs manual definition
+            trading_date_data = pd.to_datetime(load["Trading_Date"], format="%d/%m/%Y")
+        else:
+            trading_date_data = pd.to_datetime(load["Trading_Date"])
+        load['end_time'] = (trading_date_data.dt.tz_localize('Pacific/Auckland')
                             + pd.Timedelta(minutes=30) * load['TP'])
         load['end_time'] = load['end_time'].dt.tz_convert('UTC')
 
