@@ -64,17 +64,17 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         load = pd.read_csv(csv_io)
         load.rename(columns={
             "NWK_Code": "Nwk_Code",
-            'GENERATION_TYPE': "Generation_Type",
             "TRADING_DATE": "Trading_Date",
             "Trading_date": "Trading_Date",
             'TRADER': 'Trader',
-            'FLOW_DIRECTION': 'Flow_Direction'
+            'FLOW_DIRECTION': 'Flow_Direction',
+            "Gen_Code": "gen_code",
+            "POC_Code": "poc",
+            "Fuel_Code": "fuel_code"
         }, inplace=True)
 
         # Get unique generators
-        load.rename(columns={"Gen_Code": "gen_code", "POC_Code": "poc_code",
-                             "Fuel_Code": "fuel_code"}, inplace=True)
-        generator = (load[["gen_code", "poc_code", "fuel_code"]]
+        generator = (load[["gen_code", "poc", "fuel_code"]]
                      .drop_duplicates(ignore_index=True))
         insert_skip_conflict(
             engine,
@@ -86,7 +86,7 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         # Get electricity load
         load = pd.melt(
             frame=load,
-            id_vars=["gen_code", "Trading_Date"],
+            id_vars=["gen_code", "Trading_Date", "Nwk_Code"],
             value_vars=[col for col in load.columns if col.startswith('TP')],
             var_name='TP',
             value_name='load'
@@ -98,6 +98,8 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
                             + pd.Timedelta(minutes=30) * load['TP'])
         load['end_time'] = load['end_time'].dt.tz_convert('UTC')
         load = load[['gen_code', 'end_time', 'load']]
+        # aggregate Nwk_Code
+        load = load.groupby(['gen_code', 'end_time']).sum().reset_index()
         for i in range(0, load.shape[0], chunk_size):
             upsert(
                 engine,

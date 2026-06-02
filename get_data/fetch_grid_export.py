@@ -68,15 +68,15 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
             "TRADING_DATE": "Trading_Date",
             "Trading_date": "Trading_Date",
             'TRADER': 'Trader',
-            'FLOW_DIRECTION': 'Flow_Direction'
+            'FLOW_DIRECTION': 'Flow_Direction',
+            "POC": "poc",
+            "Generation_Type": "generation_type",
         }, inplace=True)
 
         # Get unique nodes
-        load['node_id'] = load['POC'] + "_" + load["Nwk_Code"] + "_" + load['Generation_Type']
-        nodes = (load[['node_id', 'POC', "Nwk_Code", 'Generation_Type']]
-                 .drop_duplicates(ignore_index=True, subset=['node_id']))
-        nodes.rename(columns={"POC": "poc", "Nwk_Code": "nwk_code",
-                              "Generation_Type": "generation_type"}, inplace=True)
+        load['node_id'] = load['poc'] + "_" + load['generation_type']
+        nodes = load[['node_id', 'poc', 'generation_type']].drop_duplicates(
+            ignore_index=True, subset=['node_id'])
         insert_skip_conflict(
             engine,
             nodes,
@@ -103,7 +103,7 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
                             + pd.Timedelta(minutes=30) * load['TP'])
         load['end_time'] = load['end_time'].dt.tz_convert('UTC')
 
-        # Aggregate traders
+        # Aggregate traders & network code
         load = load[['node_id', 'end_time', 'load']]
         load = load.groupby(['node_id', 'end_time']).sum().reset_index()
 

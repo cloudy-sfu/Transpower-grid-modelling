@@ -74,12 +74,10 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         csv_io = io.StringIO(response.text)
         load = pd.read_csv(csv_io)
         load.rename(columns={
-            "NWK_Code": "Nwk_Code",
-            'GENERATION_TYPE': "Generation_Type",
             "TRADING_DATE": "Trading_Date",
             "Trading_date": "Trading_Date",
-            'TRADER': 'Trader',
-            'FLOW_DIRECTION': 'Flow_Direction'
+            'FLOW_DIRECTION': 'Flow_Direction',
+            "POC": "poc"
         }, inplace=True)
 
         # Remove non-ASCII characters
@@ -91,7 +89,7 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         # Get electricity load
         load = pd.melt(
             frame=load,
-            id_vars=["POC", "Flow_Direction", "Trading_Date"],
+            id_vars=["poc", "Flow_Direction", "Trading_Date"],
             value_vars=[col for col in load.columns if col.startswith('TP')],
             var_name='TP',
             value_name='load'
@@ -107,9 +105,8 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
                             + pd.Timedelta(minutes=30) * load['TP'])
         load['end_time'] = load['end_time'].dt.tz_convert('UTC')
 
-        # Aggregate traders
+        # Aggregate to POC
         load['load'] = load['load'] * load['Flow_Direction']
-        load.rename(columns={"POC": "poc"}, inplace=True)
         load = load[['poc', 'end_time', 'load']]
         load = load.groupby(['poc', 'end_time']).sum().reset_index()
 

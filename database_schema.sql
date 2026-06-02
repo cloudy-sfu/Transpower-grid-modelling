@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict CYUapTEDSoQjJzVmMBYlaPzvAWH3ggAM5LdZfGg4OnGRPy6ki5UVbxuAwNN3JCj
+\restrict wZFetuvKTcdQyggyBKiFCMjyRZlRmapDGhYHqeYLl82EsZioeHwE0jsdfWalXM6
 
 -- Dumped from database version 18.4 (365f1e4)
 -- Dumped by pg_dump version 18.3
@@ -37,7 +37,7 @@ CREATE TABLE public.embedded_generation (
 --
 
 CREATE TABLE public.generation (
-    gen_code character varying(8) NOT NULL,
+    gen_code character varying(64) NOT NULL,
     load double precision,
     end_time timestamp with time zone NOT NULL
 );
@@ -49,7 +49,7 @@ CREATE TABLE public.generation (
 
 CREATE TABLE public.generator (
     gen_code character varying(64) NOT NULL,
-    poc_code character varying(8),
+    poc character varying(8),
     fuel_code character varying(8)
 );
 
@@ -59,7 +59,7 @@ CREATE TABLE public.generator (
 --
 
 CREATE TABLE public.grid_export (
-    node_id character varying(16) NOT NULL,
+    node_id character varying(12) NOT NULL,
     load double precision,
     end_time timestamp with time zone NOT NULL
 );
@@ -70,7 +70,7 @@ CREATE TABLE public.grid_export (
 --
 
 CREATE TABLE public.grid_import (
-    node_id character varying(16) NOT NULL,
+    node_id character varying(12) NOT NULL,
     load double precision,
     end_time timestamp with time zone NOT NULL
 );
@@ -81,9 +81,8 @@ CREATE TABLE public.grid_import (
 --
 
 CREATE TABLE public.grid_nodes (
-    node_id character varying(16) NOT NULL,
+    node_id character varying(12) NOT NULL,
     poc character varying(8),
-    nwk_code character varying(4),
     generation_type character varying(2)
 );
 
@@ -140,5 +139,5 @@ ALTER TABLE ONLY public.grid_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict CYUapTEDSoQjJzVmMBYlaPzvAWH3ggAM5LdZfGg4OnGRPy6ki5UVbxuAwNN3JCj
+\unrestrict wZFetuvKTcdQyggyBKiFCMjyRZlRmapDGhYHqeYLl82EsZioeHwE0jsdfWalXM6
 
