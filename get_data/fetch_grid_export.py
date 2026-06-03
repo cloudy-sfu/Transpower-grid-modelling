@@ -14,9 +14,8 @@ from tqdm import tqdm
 from postgresql_ops import upsert, insert_skip_conflict
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="[%(asctime)s] [%(levelname)s] %(message)s",
-    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.WARNING,
+    format="[%(levelname)s] %(message)s",
     stream=sys.stdout,
 )
 
@@ -45,10 +44,9 @@ with open("headers/emidatasets.json") as f:
     header_2 = json.load(f)
 chunk_size = 2000
 retries = 0
-for row in tqdm(
-    web_page.find("table").find_all('tr', recursive=False),
-    desc="Grid export"
-):
+rows = web_page.find("table").find_all('tr', recursive=False)
+pbar = tqdm(desc="Grid export", total=len(rows))
+for row in rows:
     a_href = row.find('a').get('href')
     try:
         # Download data
@@ -59,6 +57,7 @@ for row in tqdm(
             year_month_this = year_month_this[:4] + "-" + year_month_this[4:]
             if year_month_this in year_month:
                 logging.info(f"Month {year_month_this} existed in the database, skipped.")
+                pbar.total -= 1
                 continue
         a_href_1 = ("https://emidatasets.blob.core.windows.net/publicdata/Datasets/"
                     "Wholesale/Metered_data/Grid_export/") + fn
@@ -120,6 +119,7 @@ for row in tqdm(
                 ['node_id', 'end_time'],
                 "grid_export"
             )
+        pbar.update(1)
 
     except Exception as e:
         logging.warning(f"Fail to download file {a_href}\n"
