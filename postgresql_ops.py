@@ -1,5 +1,21 @@
-from sqlalchemy import MetaData
+from functools import lru_cache
+
+from sqlalchemy import MetaData, Table
 from sqlalchemy.dialects.postgresql import insert
+
+
+@lru_cache(maxsize=None)
+def _get_table(engine, table_name, schema):
+    """
+    Reflect and cache a single table per (engine, table_name, schema).
+    Reflecting on every call (the previous behaviour) issued repeated schema
+    queries to the remote database, which dominated execution time. Caching
+    removes those redundant round-trips. Reflecting only the requested table
+    (instead of the whole schema) is a further saving.
+    Ref: https://docs.sqlalchemy.org/en/20/core/metadata.html#sqlalchemy.schema.Table
+    """
+    metadata = MetaData()
+    return Table(table_name, metadata, schema=schema, autoload_with=engine)
 
 
 def upsert(engine, df, unique_key_columns, table_name, schema="public"):
@@ -9,11 +25,9 @@ def upsert(engine, df, unique_key_columns, table_name, schema="public"):
     constraint (specified by `unique_key_columns`), it updates the
     existing row with the new values from the DataFrame instead.
     """
-    metadata = MetaData()
-    metadata.reflect(bind=engine, schema=schema)
-    table = metadata.tables[f"{schema}.{table_name}"]
     if df.empty:
         return
+    table = _get_table(engine, table_name, schema)
     # Convert DataFrame to a list of dictionaries for SQLAlchemy
     data_to_insert = df.to_dict(orient='records')
     # The initial INSERT statement
@@ -43,11 +57,9 @@ def insert_skip_conflict(engine, df, unique_key_columns, table_name, schema="pub
     If a row violates a unique constraint (specified by `unique_key_columns`),
     that specific row is skipped (ignored), and the non-conflicting rows are inserted.
     """
-    metadata = MetaData()
-    metadata.reflect(bind=engine, schema=schema)
-    table = metadata.tables[f"{schema}.{table_name}"]
     if df.empty:
         return
+    table = _get_table(engine, table_name, schema)
     # Convert DataFrame to a list of dictionaries for SQLAlchemy
     data_to_insert = df.to_dict(orient='records')
     # The initial INSERT statement

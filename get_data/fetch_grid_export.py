@@ -30,7 +30,11 @@ response = session.get(
 web_page = BeautifulSoup(response.text, "html.parser")
 
 # %% Get existed year and month in database.
-engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
+engine = create_engine(
+    os.environ['NEON_DB'],
+    pool_recycle=300,
+    executemany_mode="values_plus_batch",
+)
 with open("sqls/get_year_month.sql") as f:
     sql_get_year_month = f.read()
 # pandas doesn't support dynamic table name
