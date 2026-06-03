@@ -56,7 +56,10 @@ def grid_flow_multiplier(s):
         return 0
 
 
-for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
+for row in tqdm(
+    web_page.find("table").find_all('tr', recursive=False),
+    desc="Embedded generation"
+):
     a_href = row.find('a').get('href')
     try:
         # Download data
@@ -74,15 +77,14 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         response.raise_for_status()
         csv_io = io.StringIO(response.text)
         load = pd.read_csv(csv_io)
+        # Remove non-ASCII characters
+        load.columns = load.columns.str.replace(r'[^\x00-\x7f]', '', regex=True)
         load.rename(columns={
             "TRADING_DATE": "Trading_Date",
             "Trading_date": "Trading_Date",
             'FLOW_DIRECTION': 'Flow_Direction',
             "POC": "poc"
         }, inplace=True)
-
-        # Remove non-ASCII characters
-        load.columns = load.columns.str.replace(r'[^\x00-\x7f]', '', regex=True)
 
         # Combine flow direction
         load['Flow_Direction'] = load['Flow_Direction'].apply(grid_flow_multiplier)

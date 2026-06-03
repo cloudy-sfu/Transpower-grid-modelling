@@ -45,7 +45,10 @@ with open("headers/emidatasets.json") as f:
     header_2 = json.load(f)
 chunk_size = 2000
 retries = 0
-for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
+for row in tqdm(
+    web_page.find("table").find_all('tr', recursive=False),
+    desc="Grid export"
+):
     a_href = row.find('a').get('href')
     try:
         # Download data
@@ -63,6 +66,8 @@ for row in tqdm(web_page.find("table").find_all('tr', recursive=False)):
         response.raise_for_status()
         csv_io = io.StringIO(response.text)
         load = pd.read_csv(csv_io)
+        # Remove non-ASCII characters
+        load.columns = load.columns.str.replace(r'[^\x00-\x7f]', '', regex=True)
         load.rename(columns={
             "NWK_Code": "Nwk_Code",
             'GENERATION_TYPE': "generation_type",

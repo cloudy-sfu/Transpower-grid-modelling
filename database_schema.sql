@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict wZFetuvKTcdQyggyBKiFCMjyRZlRmapDGhYHqeYLl82EsZioeHwE0jsdfWalXM6
+\restrict QxBSNmncRNydrOsGMdx2JNuQQuh9NdQhaVl3T1QbKeYtAoGEiPlqfRuUlHjZLc0
 
 -- Dumped from database version 18.4 (365f1e4)
 -- Dumped by pg_dump version 18.3
@@ -13,7 +13,7 @@ SET idle_in_transaction_session_timeout = 0;
 SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
+SELECT pg_catalog.set_config('search_path', 'public', false);
 SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
@@ -38,7 +38,7 @@ CREATE TABLE public.embedded_generation (
 
 CREATE TABLE public.generation (
     gen_code character varying(64) NOT NULL,
-    load double precision,
+    load integer,
     end_time timestamp with time zone NOT NULL
 );
 
@@ -60,7 +60,7 @@ CREATE TABLE public.generator (
 
 CREATE TABLE public.grid_export (
     node_id character varying(12) NOT NULL,
-    load double precision,
+    load integer,
     end_time timestamp with time zone NOT NULL
 );
 
@@ -71,7 +71,7 @@ CREATE TABLE public.grid_export (
 
 CREATE TABLE public.grid_import (
     node_id character varying(12) NOT NULL,
-    load double precision,
+    load integer,
     end_time timestamp with time zone NOT NULL
 );
 
@@ -139,5 +139,5 @@ ALTER TABLE ONLY public.grid_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict wZFetuvKTcdQyggyBKiFCMjyRZlRmapDGhYHqeYLl82EsZioeHwE0jsdfWalXM6
+\unrestrict QxBSNmncRNydrOsGMdx2JNuQQuh9NdQhaVl3T1QbKeYtAoGEiPlqfRuUlHjZLc0
 
