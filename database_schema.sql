@@ -2,9 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict QxBSNmncRNydrOsGMdx2JNuQQuh9NdQhaVl3T1QbKeYtAoGEiPlqfRuUlHjZLc0
+\restrict iBDUTeUhuw9XeFQ6ifFw4JwAGwgsu0mUzGxsTi56mX0ZFUVfMKeUMMIfni56Cfd
 
--- Dumped from database version 18.4 (365f1e4)
+-- Dumped from database version 18.4 (72c6e7c)
 -- Dumped by pg_dump version 18.3
 
 SET statement_timeout = 0;
@@ -13,13 +13,27 @@ SET idle_in_transaction_session_timeout = 0;
 SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', 'public', false);
+SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
 SET default_table_access_method = heap;
+
+--
+-- Name: connection_points; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.connection_points (
+    point_id character varying(10) NOT NULL,
+    name character varying(100),
+    point_type character varying(20),
+    status character varying(20),
+    longitude double precision,
+    latitude double precision
+);
+
 
 --
 -- Name: embedded_generation; Type: TABLE; Schema: public; Owner: -
@@ -88,6 +102,29 @@ CREATE TABLE public.grid_nodes (
 
 
 --
+-- Name: transmission_lines; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.transmission_lines (
+    line_id character varying(30) NOT NULL,
+    name character varying(100),
+    line_type character varying(20),
+    length_m double precision,
+    kilovolt smallint,
+    status character varying(20),
+    geometry jsonb
+);
+
+
+--
+-- Name: connection_points connection_points_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.connection_points
+    ADD CONSTRAINT connection_points_pk PRIMARY KEY (point_id);
+
+
+--
 -- Name: embedded_generation embedded_generation_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -136,8 +173,16 @@ ALTER TABLE ONLY public.grid_nodes
 
 
 --
+-- Name: transmission_lines transmission_lines_pk; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.transmission_lines
+    ADD CONSTRAINT transmission_lines_pk PRIMARY KEY (line_id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QxBSNmncRNydrOsGMdx2JNuQQuh9NdQhaVl3T1QbKeYtAoGEiPlqfRuUlHjZLc0
+\unrestrict iBDUTeUhuw9XeFQ6ifFw4JwAGwgsu0mUzGxsTi56mX0ZFUVfMKeUMMIfni56Cfd
 

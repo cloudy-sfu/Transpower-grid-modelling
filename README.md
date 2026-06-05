@@ -33,9 +33,21 @@ Add the following variables into GitHub repository settings "Secrets and variabl
 
 Create and activate a Python 3.14 virtual environment.
 
+Set the following environment variables in session level:
+
+| Variable   | Description                         |
+| ---------- | ----------------------------------- |
+| PYTHONPATH | Constant: `.`                       |
+| NEON_DB    | Connection string to Neon database. |
+
 Run the following command in terminal.
 
-```
+```powershell
+# install dependencies
 pip install -r requirements.txt
+
+# collect data -> initialize or update before analyzing, but don't need regular update
+python get_data/fetch_transmission_lines.py
+python get_data/fetch_connection_points.py
 ```
 
