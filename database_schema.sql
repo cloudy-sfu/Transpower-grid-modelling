@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict iBDUTeUhuw9XeFQ6ifFw4JwAGwgsu0mUzGxsTi56mX0ZFUVfMKeUMMIfni56Cfd
+\restrict n4MjyDTObqzN8UNLMBE76aJf1UaEKKCURxJqCfTvJZqSPazJrxhRDPHqY3DvDeD
 
 -- Dumped from database version 18.4 (72c6e7c)
 -- Dumped by pg_dump version 18.3
@@ -18,6 +18,81 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
+
+
+--
+-- Name: longest_chain(public.geometry, double precision); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.longest_chain(g public.geometry, snap_tol double precision DEFAULT 0.0000001) RETURNS TABLE(length_km double precision, start_longitude double precision, start_latitude double precision, end_longitude double precision, end_latitude double precision)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    n_parts int;
+BEGIN
+    -- Build edge table: each LineString part -> one edge with snapped node keys.
+    DROP TABLE IF EXISTS _edges;
+    CREATE TEMP TABLE _edges ON COMMIT DROP AS
+    SELECT
+        path[1]                                              AS eid,
+        ST_AsText(ST_SnapToGrid(ST_StartPoint(geom), snap_tol)) AS na,
+        ST_AsText(ST_SnapToGrid(ST_EndPoint(geom),   snap_tol)) AS nb,
+        ST_StartPoint(geom)                                  AS pa,  -- original coords
+        ST_EndPoint(geom)                                    AS pb,
+        ST_Length(geom::geography) / 1000.0                  AS len
+    FROM (
+        SELECT (ST_Dump(g)).geom AS geom, (ST_Dump(g)).path AS path
+    ) d
+    WHERE GeometryType(geom) = 'LINESTRING';
+
+    SELECT count(*) INTO n_parts FROM _edges;
+    IF n_parts = 0 THEN RETURN; END IF;
+
+    -- Directed adjacency: every edge usable from either endpoint.
+    DROP TABLE IF EXISTS _adj;
+    CREATE TEMP TABLE _adj ON COMMIT DROP AS
+    SELECT eid, na AS frm, nb AS too, pa AS pfrm, pb AS ptoo, len FROM _edges
+    UNION ALL
+    SELECT eid, nb AS frm, na AS too, pb AS pfrm, pa AS ptoo, len FROM _edges;
+
+    -- Recursive enumeration of simple paths (no repeated edge).
+    -- start_node carried so we can report the originating terminal.
+    RETURN QUERY
+    WITH RECURSIVE walk AS (
+        SELECT a.eid, a.too AS cur, a.len AS total,
+               ARRAY[a.eid] AS used,
+               a.pfrm AS start_pt, a.ptoo AS end_pt
+        FROM _adj a
+      UNION ALL
+        SELECT a.eid, a.too, w.total + a.len,
+               w.used || a.eid,
+               w.start_pt, a.ptoo
+        FROM walk w
+        JOIN _adj a ON a.frm = w.cur
+        WHERE NOT (a.eid = ANY(w.used))
+    )
+    SELECT total,
+           ST_X(start_pt), ST_Y(start_pt),
+           ST_X(end_pt),   ST_Y(end_pt)
+    FROM walk
+    ORDER BY total DESC
+    LIMIT 1;
+END;
+$$;
+
 
 SET default_table_access_method = heap;
 
@@ -112,7 +187,7 @@ CREATE TABLE public.transmission_lines (
     length_m double precision,
     kilovolt smallint,
     status character varying(20),
-    geometry jsonb
+    geometry public.geometry(Geometry,4326)
 );
 
 
@@ -184,5 +259,5 @@ ALTER TABLE ONLY public.transmission_lines
 -- PostgreSQL database dump complete
 --
 
-\unrestrict iBDUTeUhuw9XeFQ6ifFw4JwAGwgsu0mUzGxsTi56mX0ZFUVfMKeUMMIfni56Cfd
+\unrestrict n4MjyDTObqzN8UNLMBE76aJf1UaEKKCURxJqCfTvJZqSPazJrxhRDPHqY3DvDeD
 

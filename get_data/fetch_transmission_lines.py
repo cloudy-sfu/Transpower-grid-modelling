@@ -4,8 +4,11 @@ import re
 import sys
 from math import ceil
 
+# noinspection PyUnresolvedReferences
+import geoalchemy2  # register types with SQLAlchemy reflection
 import pandas as pd
 from requests import Session
+from shapely.geometry import shape
 from sqlalchemy import create_engine
 
 from postgresql_ops import upsert
@@ -81,7 +84,7 @@ n_records = response.json()["count"]
 n_pages = ceil(n_records / batch_size)
 
 # %% Paginate through all records
-engine = create_engine(os.environ['NEON_DB'], pool_recycle=300)
+engine = create_engine(os.environ['NEON_DB'], pool_recycle=300, plugins=["geoalchemy2"])
 for page in range(n_pages):
     try:
         records = []
@@ -120,6 +123,7 @@ for page in range(n_pages):
                 logging.warning(f"Fail to parse line: {feature}")
         results = pd.DataFrame(results)
         results.drop_duplicates(subset=['line_id'], inplace=True)
+        results['geometry'] = results['geometry'].apply(lambda x: shape(x).wkt)
         upsert(
             engine,
             results,
